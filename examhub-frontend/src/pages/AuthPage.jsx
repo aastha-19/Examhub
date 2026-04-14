@@ -65,7 +65,15 @@ export default function AuthPage({ onAuth }) {
   };
 
   return (
-    <div className="container flex items-center justify-between" style={{ height: '100vh', padding: '0' }}>
+  return (
+    <div className="container flex items-center justify-between" style={{ height: '100vh', padding: '0', position: 'relative' }}>
+      {/* Theme Toggle Floating Button */}
+      <div style={{ position: 'absolute', top: '2rem', right: '2rem' }}>
+         <button onClick={toggleTheme} className="btn btn-secondary" style={{padding: '0.5rem', border: 'none', background: 'var(--glass-bg)', backdropFilter: 'blur(10px)', fontSize: '1.5rem', width: 'auto', borderRadius: '50%'}} title="Toggle Theme">
+            {isDarkMode ? '🌞' : '🌙'}
+         </button>
+      </div>
+
       <div style={{ flex: 1, padding: '4rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <h1 style={{ fontSize: '4rem', lineHeight: '1.2' }}>Master Your<br/>Future with ExamHub</h1>
         <p style={{ fontSize: '1.2rem', marginTop: '1rem', maxWidth: '400px' }}>
