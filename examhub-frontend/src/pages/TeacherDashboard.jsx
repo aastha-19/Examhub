@@ -27,33 +27,43 @@ const ResultsModal = ({ results, onClose, examTitle }) => {
       background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
     }}>
-      <div className="glass-panel" style={{ width: '90%', maxWidth: '800px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="glass-panel" style={{ width: '90%', maxWidth: '900px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div className="flex justify-between items-center mb-4">
-            <h3 style={{ fontSize: '1.5rem' }}>Results: {examTitle}</h3>
+            <h3 style={{ fontSize: '1.5rem' }}>Analytics & Leaderboard: {examTitle}</h3>
             <button className="btn btn-secondary" style={{ width: 'auto', padding: '0.4rem 1rem' }} onClick={onClose}>Close</button>
         </div>
         
+        <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem' }}>
+            <div className="glass-panel text-center" style={{ flex: 1, padding: '1rem' }}>
+                <div style={{ color: 'var(--text-secondary)' }}>Total Participants</div>
+                <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{results.analytics?.totalParticipants || 0}</div>
+            </div>
+            <div className="glass-panel text-center" style={{ flex: 1, padding: '1rem' }}>
+                <div style={{ color: 'var(--text-secondary)' }}>Average Score</div>
+                <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>{results.analytics?.averageScore || 0}</div>
+            </div>
+        </div>
+
+        <h4 className="mb-2">🏆 Top 10 Leaderboard</h4>
         <div style={{ overflowY: 'auto', flex: 1, paddingRight: '10px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                     <tr style={{ borderBottom: '2px solid var(--glass-border)' }}>
-                        <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Student Name</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Email</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Correct</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Attempted</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-secondary)' }}>Score</th>
+                        <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Rank</th>
+                        <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Student Name</th>
+                        <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Correct</th>
+                        <th style={{ padding: '0.5rem', color: 'var(--text-secondary)' }}>Score</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {results.length === 0 && (
-                        <tr><td colSpan="5" style={{ padding: '2rem', textAlign: 'center' }}>No students have taken this exam yet.</td></tr>
+                    {(!results.leaderboard || results.leaderboard.length === 0) && (
+                        <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center' }}>No submissions yet.</td></tr>
                     )}
-                    {results.map((res, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                    {results.leaderboard && results.leaderboard.map((res, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)', background: i===0?'rgba(255,215,0,0.1)':'transparent' }}>
+                            <td style={{ padding: '1rem', fontWeight: 'bold' }}>#{i+1}</td>
                             <td style={{ padding: '1rem' }}><strong>{res.studentName || 'Unknown'}</strong></td>
-                            <td style={{ padding: '1rem' }}>{res.studentEmail || 'N/A'}</td>
                             <td style={{ padding: '1rem', color: 'var(--success)' }}>{res.correctAnswers}</td>
-                            <td style={{ padding: '1rem' }}>{res.totalQuestions - res.unattempted}/{res.totalQuestions}</td>
                             <td style={{ padding: '1rem', color: 'var(--accent-primary)', fontWeight: 'bold' }}>{res.score}</td>
                         </tr>
                     ))}
