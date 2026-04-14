@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/exams")
 public class ExamController {
@@ -15,15 +17,21 @@ public class ExamController {
     @Autowired
     private ExamService examService;
 
-    // Admin: Create new exam
+    // Admin/Teacher: Create new exam
     @PostMapping("/create")
-    public Exam createExam(@RequestBody Exam exam) {
+    public Exam createExam(@RequestHeader(value = "X-User-Role", required = false) String role, @Valid @RequestBody Exam exam) {
+        if (!"ROLE_TEACHER".equals(role) && !"ROLE_ADMIN".equals(role)) {
+            throw new RuntimeException("Unauthorized: Only Teachers can create exams");
+        }
         return examService.createExam(exam);
     }
 
-    // Admin: Add question to an exam
+    // Admin/Teacher: Add question to an exam
     @PostMapping("/{examId}/questions")
-    public Question addQuestion(@PathVariable Long examId, @RequestBody Question question) {
+    public Question addQuestion(@RequestHeader(value = "X-User-Role", required = false) String role, @PathVariable Long examId, @Valid @RequestBody Question question) {
+        if (!"ROLE_TEACHER".equals(role) && !"ROLE_ADMIN".equals(role)) {
+            throw new RuntimeException("Unauthorized: Only Teachers can add questions");
+        }
         return examService.addQuestionToExam(examId, question);
     }
 
@@ -47,7 +55,10 @@ public class ExamController {
 
     // Admin/Teacher: Upload image for a question
     @PostMapping("/questions/{questionId}/image")
-    public org.springframework.http.ResponseEntity<String> uploadQuestionImage(@PathVariable Long questionId, @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+    public org.springframework.http.ResponseEntity<String> uploadQuestionImage(@RequestHeader(value = "X-User-Role", required = false) String role, @PathVariable Long questionId, @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        if (!"ROLE_TEACHER".equals(role) && !"ROLE_ADMIN".equals(role)) {
+            return org.springframework.http.ResponseEntity.status(403).body("Unauthorized: Only Teachers can upload images");
+        }
         try {
             String imageUrl = examService.uploadQuestionImage(questionId, file);
             return org.springframework.http.ResponseEntity.ok(imageUrl);
@@ -58,7 +69,10 @@ public class ExamController {
 
     // Admin/Teacher: Delete Exam
     @DeleteMapping("/{examId}")
-    public org.springframework.http.ResponseEntity<String> deleteExam(@PathVariable Long examId) {
+    public org.springframework.http.ResponseEntity<String> deleteExam(@RequestHeader(value = "X-User-Role", required = false) String role, @PathVariable Long examId) {
+        if (!"ROLE_TEACHER".equals(role) && !"ROLE_ADMIN".equals(role)) {
+            return org.springframework.http.ResponseEntity.status(403).body("Unauthorized: Only Teachers can delete exams");
+        }
         try {
             examService.deleteExam(examId);
             return org.springframework.http.ResponseEntity.ok("Exam deleted successfully");
