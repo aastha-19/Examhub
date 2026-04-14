@@ -61,17 +61,19 @@ export default function TakeExam() {
     // Extract Student details from Token
     let studentName = "Unknown";
     let studentEmail = "unknown@university.edu";
+    let userId = 1;
     const token = localStorage.getItem('token');
     if (token) {
        const { jwtDecode } = await import('jwt-decode');
        const decoded = jwtDecode(token);
        studentName = decoded.name || "Unknown";
-       studentEmail = decoded.sub || "unknown@uni.edu";
+       studentEmail = decoded.sub || decoded.email || "unknown@uni.edu";
+       userId = decoded.userId || 1;
     }
 
     const payload = {
         examId: Number(id),
-        userId: 1, 
+        userId: userId, 
         studentName: studentName,
         studentEmail: studentEmail,
         answers: answers
@@ -90,6 +92,43 @@ export default function TakeExam() {
 
   const handleSubmit = () => {
     showDialog("Are you sure you want to submit?", executeSubmit, true);
+  };
+
+  // Timer & Anti-Reload
+  const [timeLeft, setTimeLeft] = useState(null);
+
+  useEffect(() => {
+     if (exam && exam.durationMinutes && !result) {
+         setTimeLeft(exam.durationMinutes * 60);
+     }
+  }, [exam, result]);
+
+  useEffect(() => {
+      if (timeLeft === null || result) return;
+      if (timeLeft <= 0) {
+          executeSubmit();
+          return;
+      }
+      const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+      return () => clearInterval(timer);
+  }, [timeLeft, result]);
+
+  useEffect(() => {
+      const handleBeforeUnload = (e) => {
+          if (!result) {
+              e.preventDefault();
+              e.returnValue = '';
+          }
+      };
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [result]);
+
+  const formatTime = (seconds) => {
+      if (seconds === null) return "--:--";
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
   };
 
   if (result) {
@@ -125,9 +164,17 @@ export default function TakeExam() {
           <h2>{exam.title}</h2>
           <p>{exam.description}</p>
         </div>
-        <div style={{ textAlign: 'right' }}>
-           <div style={{ color: 'var(--text-secondary)' }}>Questions</div>
-           <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{questions.length}</div>
+        <div style={{ textAlign: 'right', display: 'flex', gap: '2rem' }}>
+           <div>
+               <div style={{ color: 'var(--text-secondary)' }}>Time Left</div>
+               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: timeLeft <= 60 ? 'var(--danger)' : 'inherit' }}>
+                   {formatTime(timeLeft)}
+               </div>
+           </div>
+           <div>
+               <div style={{ color: 'var(--text-secondary)' }}>Questions</div>
+               <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{questions.length}</div>
+           </div>
         </div>
       </div>
 
