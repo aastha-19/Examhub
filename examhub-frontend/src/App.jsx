@@ -72,7 +72,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={!user ? <AuthPage onAuth={handleAuth} /> : <Navigate to={user.role === 'ROLE_TEACHER' ? '/teacher' : '/student'} />} />
+        <Route path="/" element={!user ? <AuthPage onAuth={handleAuth} isDarkMode={isDarkMode} toggleTheme={toggleTheme} /> : <Navigate to={user.role === 'ROLE_TEACHER' ? '/teacher' : '/student'} />} />
         
         <Route path="/teacher" element={
           <ProtectedRoute allowedRoles={['ROLE_TEACHER', 'ROLE_ADMIN']}>
