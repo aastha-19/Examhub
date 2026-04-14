@@ -65,7 +65,6 @@ export default function AuthPage({ onAuth }) {
   };
 
   return (
-  return (
     <div className="container flex items-center justify-between" style={{ height: '100vh', padding: '0', position: 'relative' }}>
       {/* Theme Toggle Floating Button */}
       <div style={{ position: 'absolute', top: '2rem', right: '2rem' }}>
