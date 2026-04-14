@@ -83,6 +83,7 @@ public class ResultService {
         result.setWrongAnswers(wrongAnswers);
         result.setUnattempted(unattempted);
         result.setScore(score);
+        result.setAttemptedAt(java.time.LocalDateTime.now());
 
         return resultRepository.save(result);
     }
