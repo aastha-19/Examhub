@@ -9,10 +9,12 @@ ExamHub is an online exam system built with Spring Boot and Spring Cloud Microse
 4. **Exam Service** (`8082`): Manages exams and questions. connects to `examhub_exam`.
 5. **Result Service** (`8083`): Evaluates exams. connects to `examhub_result`.
 
-## Prerequisites
-- Java 17
-- Maven
-- MySQL
+## Prerequisites / Necessities
+- **Java 17+** (Backend microservices)
+- **Maven** (Backend dependencies)
+- **MySQL** (Database)
+- **Node.js (v18+) & npm** (To run the React frontend)
+- **Git** (For version control)
 
 ## Setup Instructions
 
