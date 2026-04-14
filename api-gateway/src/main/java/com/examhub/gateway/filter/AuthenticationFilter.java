@@ -36,19 +36,31 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 System.out.println("Received Token: [" + authHeader + "]");
                 jwtUtil.validateToken(authHeader);
                 
-                // Role-Based Access Control
+                String role = jwtUtil.extractRole(authHeader);
+                String userId = jwtUtil.extractUserId(authHeader);
+
+                // Inject headers to downstream
+                exchange.getRequest().mutate()
+                        .header("X-User-Id", userId)
+                        .header("X-User-Role", role)
+                        .build();
+
+                // Simple Gateway Level Role-Based Access Control (can be overridden by downstream)
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethod().name();
                 boolean isRestrictedQuestionAction = path.contains("/questions") && !"GET".equals(method);
                 
                 if (path.startsWith("/api/exams/create") || isRestrictedQuestionAction) {
-                    String role = jwtUtil.extractRole(authHeader);
                     if (!"ROLE_TEACHER".equals(role) && !"ROLE_ADMIN".equals(role)) {
                         System.out.println("RBAC Blocked: Expected TEACHER/ADMIN but found " + role);
                         exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.FORBIDDEN);
                         return exchange.getResponse().setComplete();
                     }
                 }
+            } catch (io.jsonwebtoken.ExpiredJwtException e) {
+                System.out.println("JWT Expired: " + e.getMessage());
+                exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
             } catch (Exception e) {
                 System.out.println("JWT Validation Error: " + e.getMessage());
                 exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
