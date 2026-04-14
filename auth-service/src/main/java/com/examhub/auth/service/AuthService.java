@@ -28,9 +28,10 @@ public class AuthService {
 
     public String generateToken(String email) {
         Optional<User> user = userRepository.findByEmail(email);
+        Long id = user.get().getId();
         String role = user.get().getRole();
         String name = user.get().getName();
-        return jwtService.generateToken(email, name, role);
+        return jwtService.generateToken(id, email, name, role);
     }
 
     public void validateToken(String token) {
