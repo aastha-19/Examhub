@@ -60,4 +60,21 @@ public class ResultController {
         }
         return resultService.getResultsByExam(examId);
     }
+
+    // All Users: View Leaderboard
+    @GetMapping("/exam/{examId}/leaderboard")
+    public List<Result> getLeaderboard(@PathVariable Long examId) {
+        return resultService.getLeaderboard(examId);
+    }
+
+    // Teachers: View Analytics
+    @GetMapping("/exam/{examId}/analytics")
+    public java.util.Map<String, Object> getAnalytics(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @PathVariable Long examId) {
+        if (!"ROLE_TEACHER".equals(role) && !"ROLE_ADMIN".equals(role)) {
+            throw new RuntimeException("Unauthorized: Only Teachers can view analytics");
+        }
+        return resultService.getAnalytics(examId);
+    }
 }
