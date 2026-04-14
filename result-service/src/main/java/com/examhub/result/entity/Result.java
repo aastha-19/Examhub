@@ -26,4 +26,5 @@ public class Result {
     private int wrongAnswers;
     private int unattempted;
     private double score;
+    private java.time.LocalDateTime attemptedAt;
 }
