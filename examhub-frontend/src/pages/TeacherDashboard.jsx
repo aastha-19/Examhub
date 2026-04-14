@@ -133,7 +133,14 @@ export default function TeacherDashboard() {
       e.stopPropagation();
       try {
           const res = await request(`/api/results/exam/${exam.id}`);
-          setExamResults(res);
+          const analyticsResponse = await request(`/api/results/exam/${exam.id}/analytics`);
+          const leaderboardResponse = await request(`/api/results/exam/${exam.id}/leaderboard`);
+
+          setExamResults({
+              all: res,
+              analytics: analyticsResponse,
+              leaderboard: leaderboardResponse
+          });
           setViewingResultsExamName(exam.title);
       } catch (err) {
           setDialogMessage("Failed to fetch results: " + err.message);
