@@ -1,0 +1,151 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>ExamHub Architecture Documentation</title>
+<style>
+  body { font-family: "Calibri", "Arial", sans-serif; line-height: 1.6; margin: 40px; }
+  h1 { color: #2c3e50; font-size: 24pt; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+  h2 { color: #2980b9; font-size: 18pt; margin-top: 30px; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }
+  h3 { color: #16a085; font-size: 14pt; }
+  ul { margin-bottom: 20px; }
+  li { margin-bottom: 8px; }
+  p { font-size: 11pt; text-align: justify; }
+  code { background-color: #f4f4f4; padding: 2px 4px; font-family: "Consolas", monospace; font-size: 10.5pt; color: #c0392b; }
+  strong { color: #333; }
+</style>
+</head>
+<body>
+
+<h1>ExamHub Full-Stack Architecture Documentation (Extended)</h1>
+
+<p>ExamHub is a modern, distributed microservices-based application designed to facilitate online examinations seamlessly. The system is split perfectly between a dynamic Javascript frontend and an advanced Java Spring Boot distributed backend.</p>
+
+<p>Below is the complete technical breakdown of the architecture, detailed functional endpoints, internal algorithms, data models, and services used in this project.</p>
+
+<h2>1. System Architecture Overview</h2>
+
+<p>The system strictly adheres to the <strong>Microservices Architecture Pattern</strong>. Instead of one giant codebase handling everything, the backend is intelligently split into 5 distinct "mini-applications" (services) that communicate via HTTP/REST and register themselves with a central naming server.</p>
+
+<h3>Backend Tech Stack</h3>
+<ul>
+  <li><strong>Language</strong>: Java 17+</li>
+  <li><strong>Framework</strong>: Spring Boot 3 &amp; Spring Cloud</li>
+  <li><strong>Security</strong>: Spring Security + JSON Web Tokens (JWT) for stateless authentication.</li>
+  <li><strong>Database</strong>: MySQL (using Spring Data JPA / Hibernate)</li>
+</ul>
+
+<h3>Frontend Tech Stack</h3>
+<ul>
+  <li><strong>Framework</strong>: React.js</li>
+  <li><strong>Styling</strong>: Pure CSS (Vanilla) utilizing modern CSS variables for themes (Glassmorphism &amp; Dark Mode).</li>
+  <li><strong>Network Routing</strong>: React Router DOM (v6+).</li>
+</ul>
+
+<h2>2. In-Depth Microservices Functional Breakdown</h2>
+
+<h3>A. eureka-server (The Registry)</h3>
+<ul>
+  <li><strong>Port:</strong> <code>8761</code></li>
+  <li><strong>Role:</strong> The Service Registry.</li>
+  <li><strong>Vast Functions:</strong>
+    <ul>
+      <li><strong>Dynamic Registration</strong>: Acts as a dynamic phonebook. When <code>exam-service</code> boots, it sends a heartbeat to Eureka saying "I'm alive on port 8082".</li>
+      <li><strong>Load Balancing Resolution</strong>: In an enterprise scenario where three <code>exam-services</code> are running, Eureka allows the <code>api-gateway</code> to round-robin traffic between them without hardcoded IPs.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>B. api-gateway (The Front Door &amp; Security Bouncer)</h3>
+<ul>
+  <li><strong>Port:</strong> <code>8080</code></li>
+  <li><strong>Role:</strong> Centralized Entrypoint. Every react frontend call points solely to <code>localhost:8080</code>.</li>
+  <li><strong>Vast Functions &amp; Filters:</strong>
+    <ul>
+      <li><strong>Path Routing:</strong>
+        <ul>
+          <li><code>localhost:8080/api/auth/**</code> → Routes to <code>auth-service</code></li>
+          <li><code>localhost:8080/api/exams/**</code> → Routes to <code>exam-service</code></li>
+          <li><code>localhost:8080/api/results/**</code> → Routes to <code>result-service</code></li>
+        </ul>
+      </li>
+      <li><strong>Global CORS Configurator</strong>: Intercepts <code>OPTIONS</code> pre-flight requests from the React browser and physically injects <code>Access-Control-Allow-Origin</code> headers so frontend cross-origin blocks are bypassed securely.</li>
+      <li><strong>AuthenticationFilter.java</strong>: A custom Spring Cloud Gateway filter. It intercepts requests going to protected endpoints (e.g., <code>/api/exams</code>), extracts the <code>Authorization: Bearer &lt;TOKEN&gt;</code> header, calls <code>JwtUtil.java</code> to mathematically verify the token signature, and rejects the user with a <code>401 Unauthorized</code> if compromised!</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>C. auth-service (Identity Provider)</h3>
+<ul>
+  <li><strong>Port:</strong> <code>8081</code></li>
+  <li><strong>Database:</strong> <code>examhub_auth</code></li>
+  <li><strong>Vast Functions, Logic &amp; Endpoints:</strong>
+    <ul>
+      <li><code>POST /auth/register</code>: Takes <code>email</code>, <code>name</code>, <code>password</code>, <code>role</code>, and <code>sapid</code>. Passes the password through <code>PasswordEncoder</code> to hash it (BCrypt), and saves the <code>User</code> entity to MySQL.</li>
+      <li><code>POST /auth/login</code>: Accepts <code>email</code> and <code>password</code>. Validates them securely using <code>AuthenticationManager</code>.</li>
+      <li><strong>JwtService.java</strong>: Upon successful validation, this service generates a cryptographic Token. It explicitly injects the user's <code>name</code>, <code>sub</code> (email), and Spring Security <code>role</code> directly into the token payload so it can be extracted independently by the Frontend!</li>
+      <li><strong>User Details Architecture</strong>: Overrides Spring Security's native <code>UserDetailsService</code> to fetch user profiles straight from the MySQL Database, translating the User entity into a protected <code>UserDetails</code> object.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>D. exam-service (The Core Engine)</h3>
+<ul>
+  <li><strong>Port:</strong> Variable (Configured via Eureka)</li>
+  <li><strong>Database:</strong> <code>examhub_core</code></li>
+  <li><strong>Vast Functions, Logic &amp; Endpoints:</strong>
+    <ul>
+      <li><code>POST /api/exams/create</code>: Admin endpoint to spawn a parent Exam containing attributes like <code>title</code>, <code>subject</code>, <code>duration</code>, <code>positiveMarks</code>, and <code>negativeMarks</code>.</li>
+      <li><code>GET /api/exams</code>: Fetches all existing exams.</li>
+      <li><code>DELETE /api/exams/{id}</code>: Secure command to prune a compromised or old exam.</li>
+      <li><code>POST /api/exams/{id}/questions</code>: Links a new Child <code>Question</code> to a Parent <code>Exam</code> using <code>@ManyToOne</code> Hibernate cascaded mappings!</li>
+      <li><code>POST /api/exams/questions/{id}/image</code>: Overloaded Multipart File receiver that accepts a physically uploaded PNG/JPG. Uses robust random UUID renaming algorithms to save the diagram permanently to the deployment's hard drive and map its location URL back to the question.</li>
+      <li><code>GET /api/exams/{id}/questions</code>: Exposes test data for fetching during actual exam sessions.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>E. result-service (The Auto-Grader)</h3>
+<ul>
+  <li><strong>Port:</strong> Variable</li>
+  <li><strong>Database:</strong> <code>examhub_result</code></li>
+  <li><strong>Vast Functions, Logic &amp; Endpoints:</strong>
+    <ul>
+      <li><code>POST /api/results/submit</code>: <strong>The most complex logic block in the system.</strong>
+        <ol>
+          <li>Examines the submitted JSON map of answers (<code>{ questionID: "A" }</code>).</li>
+          <li>Makes an internal Cross-Microservice <code>RestTemplate</code> HTTP call to <code>EXAM-SERVICE</code> to fetch the true answer key and exam scoring rules (+1 for correct, -0.25 for incorrect).</li>
+          <li>Runs an <strong>Auto-Evaluation Algorithm</strong>: Iterates through the student's map, checking nulls for unattempted, appending <code>score += positiveMarks</code> on correct matches, and subtracting <code>negativeMarks</code> for incorrect ones.</li>
+          <li>Caches the exact <code>studentName</code> &amp; <code>studentEmail</code> into the Result object alongside the calculated score and persists it!</li>
+        </ol>
+      </li>
+      <li><code>GET /api/results/exam/{examId}</code>: Serves the analytical data straight to the Teacher Dashboard.</li>
+      <li><code>GET /api/results/user/{userId}</code>: Allows a student to natively review their own test histories.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>3. Frontend Architecture (examhub-frontend)</h2>
+
+<p>The frontend acts as the beautiful client layer serving the microservices via <code>http://localhost:8080</code>.</p>
+
+<h3>Core Functions &amp; Features:</h3>
+<ul>
+  <li><strong>api.js Interceptor</strong>: A globally used wrapper function for the native <code>fetch</code> API. It automatically rips the JWT token from <code>localStorage</code> and attaches it as a <code>Bearer</code> header to every single outgoing request! It physically traps <code>401 Unauthorized</code> responses and auto-re-routes the browser back to the login page safely.</li>
+  <li><strong>AuthPage.jsx Stateful Engine</strong>: A dynamic registration interface implementing stateful conditionals (asking for a <code>SAP ID</code> only if the <code>Student</code> role is selected). Includes strict RegEx validation preventing a user from submitting a weak password without numericals/symbols, and catches "Confirm Password" mismatches completely client-side to save API calls.</li>
+  <li><strong>TeacherDashboard.jsx</strong>: Displays a Teacher's created exams grouped natively into UI Folders by <code>Subject</code>. Offers full capability to Publish exams, Append MCQs with image attachments, and view the global Student Analytics tables by parsing <code>result-service</code> data.</li>
+  <li><strong>TakeExam.jsx Session Engine</strong>: Handles active test-taking. Submits a map of <code>Question ID</code> -> <code>Selected Option</code> back to the <code>result-service</code> payload. Most importantly, it decodes the active JWT token via <code>jwt-decode</code> to extract the literal string identity of the test taker (<code>name</code> and <code>email</code>), and binds it permanently to the submission record!</li>
+</ul>
+
+<h2>4. Boot Sequence</h2>
+
+<p>To run this architecture without crashing, the deployment order is highly specific:</p>
+<ol>
+  <li>Ensure MySQL server is running locally on port 3306.</li>
+  <li>Boot <code>eureka-server</code> first and wait for initialization. (Checks heartbeat).</li>
+  <li>Boot <code>api-gateway</code> second so it can latch onto the registry.</li>
+  <li>Boot <code>auth-service</code>, <code>exam-service</code>, and <code>result-service</code>.</li>
+  <li>Run <code>npm run dev</code> in the React frontend.</li>
+</ol>
+
+</body>
+</html>
