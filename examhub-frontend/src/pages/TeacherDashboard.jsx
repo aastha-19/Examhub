@@ -188,36 +188,46 @@ export default function TeacherDashboard() {
       <div style={{ display: 'flex', gap: '2rem' }}>
         {/* Exam Management */}
         <div style={{ flex: 1 }}>
-          <div className="glass-panel">
-            <h3>Create New Exam</h3>
-            <form onSubmit={handleCreateExam} className="mt-4">
-              <div className="flex gap-4">
-                <div className="form-group" style={{ flex: 1}}>
-                  <input placeholder="Title" required value={newExam.title} onChange={e => setNewExam({...newExam, title: e.target.value})} />
-                </div>
-                <div className="form-group" style={{ flex: 1}}>
-                  <input placeholder="Subject" required value={newExam.subject} onChange={e => setNewExam({...newExam, subject: e.target.value})} />
-                </div>
+          <div className="glass-panel text-left" style={{ padding: '2rem' }}>
+            <h3 style={{ borderBottom: '2px solid var(--glass-border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>✨ Create New Exam</h3>
+            <form onSubmit={handleCreateExam}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                 <h4 style={{ color: 'var(--accent-primary)', marginBottom: '1rem' }}>1. Basic Details</h4>
+                 <div className="flex gap-4">
+                   <div className="form-group" style={{ flex: 1}}>
+                     <label>Exam Title</label>
+                     <input placeholder="e.g. Midterm Assessment" required value={newExam.title} onChange={e => setNewExam({...newExam, title: e.target.value})} />
+                   </div>
+                   <div className="form-group" style={{ flex: 1}}>
+                     <label>Subject Category</label>
+                     <input placeholder="e.g. Science" required value={newExam.subject} onChange={e => setNewExam({...newExam, subject: e.target.value})} />
+                   </div>
+                 </div>
+                 
+                 <div className="form-group">
+                   <label>Description & Instructions</label>
+                   <textarea rows="3" placeholder="Provide clear instructions for the students..." required value={newExam.description} onChange={e => setNewExam({...newExam, description: e.target.value})} />
+                 </div>
               </div>
-              
-              <div className="form-group">
-                <textarea placeholder="Description" required value={newExam.description} onChange={e => setNewExam({...newExam, description: e.target.value})} />
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                 <h4 style={{ color: 'var(--accent-primary)', marginBottom: '1rem' }}>2. Rules & Marking</h4>
+                 <div className="flex gap-4">
+                   <div className="form-group" style={{ flex: 1 }}>
+                       <label>Duration (mins)</label>
+                       <input type="number" required value={newExam.durationMinutes} onChange={e => setNewExam({...newExam, durationMinutes: Number(e.target.value)})} />
+                   </div>
+                   <div className="form-group" style={{ flex: 1 }}>
+                       <label>+ Marks per Correct</label>
+                       <input type="number" step="0.1" required value={newExam.positiveMarksPerQuestion} onChange={e => setNewExam({...newExam, positiveMarksPerQuestion: Number(e.target.value)})} />
+                   </div>
+                   <div className="form-group" style={{ flex: 1 }}>
+                       <label>- Marks per Wrong</label>
+                       <input type="number" step="0.1" required value={newExam.negativeMarksPerQuestion} onChange={e => setNewExam({...newExam, negativeMarksPerQuestion: Number(e.target.value)})} />
+                   </div>
+                 </div>
               </div>
-              <div className="flex gap-4">
-                <div className="form-group" style={{ flex: 1 }}>
-                    <label>Duration (mins)</label>
-                    <input type="number" required value={newExam.durationMinutes} onChange={e => setNewExam({...newExam, durationMinutes: Number(e.target.value)})} />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                    <label>+ Marks</label>
-                    <input type="number" step="0.1" required value={newExam.positiveMarksPerQuestion} onChange={e => setNewExam({...newExam, positiveMarksPerQuestion: Number(e.target.value)})} />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                    <label>- Marks</label>
-                    <input type="number" step="0.1" required value={newExam.negativeMarksPerQuestion} onChange={e => setNewExam({...newExam, negativeMarksPerQuestion: Number(e.target.value)})} />
-                </div>
-              </div>
-              <button type="submit" className="btn btn-primary">Publish Exam</button>
+              <button type="submit" className="btn btn-primary" style={{ padding: '1rem', fontSize: '1.1rem' }}>Publish Exam Configuration</button>
             </form>
           </div>
 
@@ -226,10 +236,22 @@ export default function TeacherDashboard() {
           {!selectedSubject ? (
             <div className="dashboard-grid">
                {subjects.map(sub => (
-                   <div key={sub} className="glass-panel text-center" style={{cursor: 'pointer', padding: '2rem'}} onClick={() => setSelectedSubject(sub)}>
-                       <h1>📁</h1>
+                   <div key={sub} className="glass-panel" 
+                    style={{ 
+                      cursor: 'pointer', textAlign: 'center', padding: '3rem',
+                      transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+                    }} 
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 40px rgba(139,92,246,0.3)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px 0 rgba(0,0,0,0.37)'; }}
+                    onClick={() => setSelectedSubject(sub)}
+                   >
+                       <div style={{ fontSize: '3rem', marginBottom: '1rem', display: 'inline-block', background: 'rgba(139,92,246,0.2)', padding: '1rem', borderRadius: '50%' }}>
+                        📁
+                       </div>
                        <h3>{sub}</h3>
-                       <p style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>{exams.filter(e=>(e.subject || 'Uncategorized') === sub).length} Exams</p>
+                       <div style={{ color: 'var(--accent-secondary)', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                           {exams.filter(e=>(e.subject || 'Uncategorized') === sub).length} Published Exams
+                       </div>
                    </div>
                ))}
                {subjects.length === 0 && <p>No exams created yet.</p>}
