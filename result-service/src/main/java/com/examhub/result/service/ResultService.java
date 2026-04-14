@@ -106,4 +106,18 @@ public class ResultService {
     public List<Result> getResultsByExam(Long examId) {
         return resultRepository.findByExamId(examId);
     }
+
+    public List<Result> getLeaderboard(Long examId) {
+        return resultRepository.findTop10ByExamIdOrderByScoreDesc(examId);
+    }
+
+    public java.util.Map<String, Object> getAnalytics(Long examId) {
+        Long totalParticipants = resultRepository.countByExamId(examId);
+        Double averageScore = resultRepository.getAverageScoreByExamId(examId);
+        
+        java.util.Map<String, Object> analytics = new java.util.HashMap<>();
+        analytics.put("totalParticipants", totalParticipants);
+        analytics.put("averageScore", averageScore != null ? Math.round(averageScore * 100.0) / 100.0 : 0.0);
+        return analytics;
+    }
 }
