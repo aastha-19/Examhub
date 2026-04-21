@@ -1,0 +1,154 @@
+<div class="container">
+  <!-- Header Navigation -->
+  <div style="position: absolute; top: 1.5rem; right: 2rem; z-index: 100; display: flex; gap: 1rem; align-items: center;">
+    <app-theme-toggle [isDarkMode]="isDarkMode" (toggle)="toggleTheme()"></app-theme-toggle>
+    <button class="btn btn-danger" style="padding: 0.5rem 1rem; border-radius: 8px;" (click)="authService.logout()">Logout</button>
+  </div>
+
+  @if (loading) {
+    <div class="text-center" style="margin-top: 10vh;">
+      <h2>Loading Dashboard...</h2>
+    </div>
+  } @else {
+    <!-- Tabs -->
+    <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--glass-border); margin-bottom: 2rem;">
+      <button 
+        (click)="activeTab = 'subjects'"
+        style="background: transparent; border: none; padding: 1rem 2rem; cursor: pointer; font-size: 1.2rem; font-weight: 600;"
+        [style.color]="activeTab === 'subjects' ? 'var(--accent-primary)' : 'var(--text-secondary)'"
+        [style.borderBottom]="activeTab === 'subjects' ? '3px solid var(--accent-primary)' : '3px solid transparent'">
+        Explore Subjects
+      </button>
+      <button 
+        (click)="activeTab = 'results'; chartInstance = null"
+        style="background: transparent; border: none; padding: 1rem 2rem; cursor: pointer; font-size: 1.2rem; font-weight: 600;"
+        [style.color]="activeTab === 'results' ? 'var(--accent-primary)' : 'var(--text-secondary)'"
+        [style.borderBottom]="activeTab === 'results' ? '3px solid var(--accent-primary)' : '3px solid transparent'">
+        My Results
+      </button>
+      <button 
+        (click)="activeTab = 'progress'; chartInstance = null"
+        style="background: transparent; border: none; padding: 1rem 2rem; cursor: pointer; font-size: 1.2rem; font-weight: 600;"
+        [style.color]="activeTab === 'progress' ? 'var(--accent-primary)' : 'var(--text-secondary)'"
+        [style.borderBottom]="activeTab === 'progress' ? '3px solid var(--accent-primary)' : '3px solid transparent'">
+        Analytics Progress
+      </button>
+    </div>
+
+    @if (activeTab === 'progress') {
+      <div>
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">Analytics Progress Tracker</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">A visual representation of your performance growth over time.</p>
+        <div class="glass-panel" style="padding: 2rem; display: flex; justify-content: center; align-items: center; min-height: 400px;">
+          @if (richResults.length === 0) {
+            <p>Complete at least one exam to visualize your progress.</p>
+          } @else {
+             <canvas #progressChart style="max-height: 400px; width: 100%;"></canvas>
+          }
+        </div>
+      </div>
+    }
+
+    @if (activeTab === 'subjects') {
+      @if (!selectedSubject) {
+        <div>
+          <h2 style="font-size: 2rem; margin-bottom: 1rem;">Available Subjects</h2>
+          <p style="color: var(--text-secondary);">Select a subject category below to view and undertake available exams.</p>
+          
+          <div class="dashboard-grid mt-4">
+            @for (sub of subjects; track sub) {
+              <div class="glass-panel" 
+                style="cursor: pointer; text-align: center; padding: 3rem; transition: transform 0.3s ease, box-shadow 0.3s ease;" 
+                (mouseenter)="$any($event.target).style.transform = 'translateY(-5px)'; $any($event.target).style.boxShadow = '0 10px 40px rgba(59,130,246,0.3)'"
+                (mouseleave)="$any($event.target).style.transform = 'translateY(0)'; $any($event.target).style.boxShadow = '0 8px 32px 0 rgba(0,0,0,0.37)'"
+                (click)="selectedSubject = sub">
+                <div style="font-size: 3rem; margin-bottom: 1rem; display: inline-block; background: rgba(59,130,246,0.2); padding: 1rem; border-radius: 50%;">
+                  📚
+                </div>
+                <h3>{{ sub }}</h3>
+                <div style="color: var(--accent-primary); font-weight: bold; margin-top: 0.5rem;">
+                   {{ getExamsForSubject(sub).length }} Exams
+                </div>
+              </div>
+            }
+            @if (subjects.length === 0) {
+              <div style="color: var(--text-secondary);">No subjects are currently published.</div>
+            }
+          </div>
+        </div>
+      } @else {
+        <div>
+          <button class="btn btn-secondary mb-4" (click)="selectedSubject = null" style="width: auto; padding: 0.5rem 1rem;">
+            ⬅ Back to Subjects
+          </button>
+          
+          <h2 style="font-size: 2rem; margin-bottom: 1rem;">{{ selectedSubject }} Exams</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem;">Ready to test your knowledge? Select an exam to begin.</p>
+          
+          <div class="dashboard-grid">
+            @for (exam of getExamsForSubject(selectedSubject); track exam.id) {
+              <div class="glass-panel" style="display: flex; flex-direction: column; padding: 2rem;">
+                <h3 style="font-size: 1.4rem;">{{ exam.title }}</h3>
+                <p class="mt-4" style="flex: 1;">{{ exam.description }}</p>
+                
+                <div class="flex justify-between items-center mt-4" style="background: rgba(0,0,0,0.1); padding: 1rem; border-radius: 8px;">
+                  <div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Duration</div>
+                    <div style="font-weight: 600;">{{ exam.durationMinutes }} mins</div>
+                  </div>
+                  <div class="text-center">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Marks</div>
+                    <div style="font-weight: 600;"><span style="color: var(--success);">+{{ exam.positiveMarksPerQuestion }}</span> / <span style="color:var(--danger);">-{{ exam.negativeMarksPerQuestion }}</span></div>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary mt-4" (click)="startExam(exam.id)" style="width: 100%; padding: 1rem;">
+                  Start Exam
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    @if (activeTab === 'results') {
+      <div>
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">My Results</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">A detailed breakdown of all your attempted examinations.</p>
+        
+        <div class="glass-panel" style="padding: 0; overflow: hidden;">
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="background: rgba(0,0,0,0.2);">
+                  <th style="padding: 1rem; color: var(--text-secondary);">Exam Name</th>
+                  <th style="padding: 1rem; color: var(--text-secondary);">Subject</th>
+                  <th style="padding: 1rem; color: var(--text-secondary);">Date Attempted</th>
+                  <th style="padding: 1rem; color: var(--text-secondary);">Score</th>
+                  <th style="padding: 1rem; color: var(--text-secondary);">Correct</th>
+                  <th style="padding: 1rem; color: var(--text-secondary);">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (richResults.length === 0) {
+                   <tr><td colspan="6" style="padding: 2rem; text-align: center;">You haven't attempted any exams yet.</td></tr>
+                }
+                @for (res of richResults; track res.id) {
+                  <tr style="border-bottom: 1px solid var(--glass-border);">
+                    <td style="padding: 1rem; font-weight: bold;">{{ res.examTitle }}</td>
+                    <td style="padding: 1rem;">{{ res.examSubject }}</td>
+                    <td style="padding: 1rem; font-size: 0.9rem;">{{ formatDateTime(res.attemptedAt) }}</td>
+                    <td style="padding: 1rem; font-weight: bold; font-size: 1.2rem;">{{ res.score }}</td>
+                    <td style="padding: 1rem; color: var(--success);">{{ res.correctAnswers }} / {{ res.totalQuestions }}</td>
+                    <td style="padding: 1rem; font-weight: bold;" [style.color]="getPassStatus(res).color">{{ getPassStatus(res).label }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

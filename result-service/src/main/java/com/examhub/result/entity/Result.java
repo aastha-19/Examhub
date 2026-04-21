@@ -27,4 +27,7 @@ public class Result {
     private int unattempted;
     private double score;
     private java.time.LocalDateTime attemptedAt;
+    
+    // Anti-Cheating Data
+    private int tabSwitches;
 }

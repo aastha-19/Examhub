@@ -1,0 +1,117 @@
+@if (dialogState.message) {
+  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="glass-panel" style="min-width: 300px; text-align: center;">
+      <h3 style="margin-bottom: 1.5rem;">Notice</h3>
+      <p style="margin-bottom: 1.5rem;">{{ dialogState.message }}</p>
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        @if (dialogState.showCancel) {
+          <button class="btn btn-secondary" (click)="closeDialog()" style="width: auto;">Cancel</button>
+        }
+        <button class="btn btn-primary" (click)="dialogState.onConfirm ? dialogState.onConfirm() : closeDialog()" style="width: auto;">Confirm</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (result) {
+  <div class="container" style="max-width: 600px; margin-top: 10vh;">
+      <div class="glass-panel text-center">
+          <h1 style="font-size: 4rem;">🏆</h1>
+          <h2>Exam Submitted!</h2>
+          <div class="flex justify-between" style="margin-top: 2rem; font-size: 1.2rem;">
+              <div><strong>Score:</strong> <span style="color: var(--accent-primary);">{{ result.score }}</span></div>
+              <div><strong>Correct:</strong> <span style="color: var(--success);">{{ result.correctAnswers }}</span></div>
+              <div><strong>Wrong:</strong> <span style="color: var(--danger);">{{ result.wrongAnswers }}</span></div>
+          </div>
+          <a class="btn btn-primary mt-4" routerLink="/student" style="display: inline-block; text-decoration: none;">Back to Dashboard</a>
+      </div>
+  </div>
+} @else {
+  @if (!exam) {
+    <div class="container">Loading...</div>
+  } @else {
+    <div class="container" style="max-width: 800px;">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2>{{ exam.title }}</h2>
+          <p>{{ exam.description }}</p>
+        </div>
+        <div style="text-align: right; display: flex; gap: 2rem;">
+           @if (timeLeft !== null) {
+               <div>
+                   <div style="color: var(--text-secondary);">Time Left</div>
+                   <div style="font-size: 1.5rem; font-weight: bold;" [style.color]="timeLeft <= 60 ? 'var(--danger)' : 'inherit'">
+                       {{ formatTime(timeLeft) }}
+                   </div>
+               </div>
+           }
+           <div>
+               <div style="color: var(--text-secondary);">Questions</div>
+               <div style="font-size: 1.5rem; font-weight: bold;">{{ questions.length }}</div>
+           </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+        @for (q of questions; track q.id; let i = $index) {
+          <div class="glass-panel">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.2rem; flex: 1;">{{ i + 1 }}. {{ q.text }}</h3>
+                <button (click)="toggleBookmark(q.id)" 
+                        style="background: transparent; border: none; cursor: pointer; padding: 0.5rem;"
+                        [title]="bookmarkedQuestions.has(q.id.toString()) ? 'Remove Bookmark' : 'Bookmark Question'">
+                   @if (bookmarkedQuestions.has(q.id.toString())) {
+                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="var(--accent-primary)" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                         <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+                       </svg>
+                   } @else {
+                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                         <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+                       </svg>
+                   }
+                </button>
+            </div>
+            
+            @if (q.imageUrl) {
+              <img [src]="q.imageUrl" alt="Question Diagram" style="max-width: 100%; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--glass-border);" />
+            }
+
+            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+              <label style="padding: 1rem; border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 1rem;"
+                     [style.background]="answers[q.id] === 'A' ? 'rgba(59, 130, 246, 0.1)' : 'transparent'"
+                     [style.borderColor]="answers[q.id] === 'A' ? 'var(--accent-primary)' : 'var(--glass-border)'">
+                <input type="radio" [name]="'q-' + q.id" [checked]="answers[q.id] === 'A'" (change)="handleSelectAnswer(q.id, 'A')" style="width: auto;" />
+                <span><strong>A:</strong> {{ q.optionA }}</span>
+              </label>
+
+              <label style="padding: 1rem; border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 1rem;"
+                     [style.background]="answers[q.id] === 'B' ? 'rgba(59, 130, 246, 0.1)' : 'transparent'"
+                     [style.borderColor]="answers[q.id] === 'B' ? 'var(--accent-primary)' : 'var(--glass-border)'">
+                <input type="radio" [name]="'q-' + q.id" [checked]="answers[q.id] === 'B'" (change)="handleSelectAnswer(q.id, 'B')" style="width: auto;" />
+                <span><strong>B:</strong> {{ q.optionB }}</span>
+              </label>
+
+              <label style="padding: 1rem; border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 1rem;"
+                     [style.background]="answers[q.id] === 'C' ? 'rgba(59, 130, 246, 0.1)' : 'transparent'"
+                     [style.borderColor]="answers[q.id] === 'C' ? 'var(--accent-primary)' : 'var(--glass-border)'">
+                <input type="radio" [name]="'q-' + q.id" [checked]="answers[q.id] === 'C'" (change)="handleSelectAnswer(q.id, 'C')" style="width: auto;" />
+                <span><strong>C:</strong> {{ q.optionC }}</span>
+              </label>
+
+              <label style="padding: 1rem; border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 1rem;"
+                     [style.background]="answers[q.id] === 'D' ? 'rgba(59, 130, 246, 0.1)' : 'transparent'"
+                     [style.borderColor]="answers[q.id] === 'D' ? 'var(--accent-primary)' : 'var(--glass-border)'">
+                <input type="radio" [name]="'q-' + q.id" [checked]="answers[q.id] === 'D'" (change)="handleSelectAnswer(q.id, 'D')" style="width: auto;" />
+                <span><strong>D:</strong> {{ q.optionD }}</span>
+              </label>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+         <button class="btn btn-primary" (click)="handleSubmit()" style="width: 200px;">Submit Exam</button>
+      </div>
+    </div>
+  }
+}

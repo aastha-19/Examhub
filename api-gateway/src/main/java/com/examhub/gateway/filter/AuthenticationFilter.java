@@ -40,10 +40,11 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 String userId = jwtUtil.extractUserId(authHeader);
 
                 // Inject headers to downstream
-                exchange.getRequest().mutate()
+                org.springframework.http.server.reactive.ServerHttpRequest request = exchange.getRequest().mutate()
                         .header("X-User-Id", userId)
                         .header("X-User-Role", role)
                         .build();
+                exchange = exchange.mutate().request(request).build();
 
                 // Simple Gateway Level Role-Based Access Control (can be overridden by downstream)
                 String path = exchange.getRequest().getPath().toString();

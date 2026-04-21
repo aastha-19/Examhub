@@ -20,4 +20,6 @@ public class SubmitExamRequest {
     
     @NotNull(message = "Answers map cannot be null")
     private Map<Long, String> answers;
+    
+    private int tabSwitches;
 }

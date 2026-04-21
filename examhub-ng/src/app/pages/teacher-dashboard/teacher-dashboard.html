@@ -1,0 +1,232 @@
+<div class="container">
+  <!-- Dialog constraints translated -->
+  @if (dialogMessage) {
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+      <div class="glass-panel" style="min-width: 300px; text-align: center;">
+        <h3 style="margin-bottom: 1.5rem;">Notice</h3>
+        <p style="margin-bottom: 1.5rem;">{{ dialogMessage }}</p>
+        <button class="btn btn-primary" (click)="dismissDialog()">OK</button>
+      </div>
+    </div>
+  }
+
+  <!-- Header Navigation -->
+  <div style="position: absolute; top: 1.5rem; right: 2rem; z-index: 100; display: flex; gap: 1rem; align-items: center;">
+    <app-theme-toggle [isDarkMode]="isDarkMode" (toggle)="toggleTheme()"></app-theme-toggle>
+    <button class="btn btn-danger" style="padding: 0.5rem 1rem; border-radius: 8px;" (click)="authService.logout()">Logout</button>
+  </div>
+
+  <!-- Results Modal -->
+  @if (examResults) {
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+      <div class="glass-panel" style="width: 90%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="flex justify-between items-center mb-4">
+            <h3 style="font-size: 1.5rem;">Analytics & Leaderboard: {{ viewingResultsExamName }}</h3>
+            <button class="btn btn-secondary" style="width: auto; padding: 0.4rem 1rem;" (click)="examResults = null">Close</button>
+        </div>
+        
+        <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem;">
+            <div class="glass-panel text-center" style="flex: 1; padding: 1rem;">
+                <div style="color: var(--text-secondary);">Total Participants</div>
+                <div style="font-size: 2rem; font-weight: bold;">{{ examResults.analytics?.totalParticipants || 0 }}</div>
+            </div>
+            <div class="glass-panel text-center" style="flex: 1; padding: 1rem;">
+                <div style="color: var(--text-secondary);">Average Score</div>
+                <div style="font-size: 2rem; font-weight: bold; color: var(--accent-primary);">{{ examResults.analytics?.averageScore || 0 }}</div>
+            </div>
+        </div>
+
+        @if (examResults.analytics?.questionMetrics) {
+          <h4 class="mb-2">📉 Question Analytics (Difficulty Maps)</h4>
+          <div style="display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 1rem;">
+              @for (qId of getQuestionIds(examResults.analytics.questionMetrics); track qId) {
+                  <div class="glass-panel" style="min-width: 150px; padding: 1rem; text-align: center; background: rgba(0,0,0,0.1);">
+                      <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.5rem;">Question {{ qId }}</div>
+                      <div style="font-size: 1.5rem; font-weight: bold;" 
+                           [style.color]="examResults.analytics.questionMetrics[qId].accuracy < 50 ? 'var(--danger)' : 'var(--success)'">
+                          {{ examResults.analytics.questionMetrics[qId].accuracy }}%
+                      </div>
+                      <div style="font-size: 0.7rem; margin-top: 0.5rem;">Accuracy</div>
+                  </div>
+              }
+          </div>
+        }
+
+        <h4 class="mb-2">🏆 Top 10 Leaderboard</h4>
+        <div style="overflow-y: auto; flex: 1; padding-right: 10px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--glass-border);">
+                        <th style="padding: 0.5rem; color: var(--text-secondary);">Rank</th>
+                        <th style="padding: 0.5rem; color: var(--text-secondary);">Student Name</th>
+                        <th style="padding: 0.5rem; color: var(--text-secondary);">Correct</th>
+                        <th style="padding: 0.5rem; color: var(--text-secondary);">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!examResults.leaderboard || examResults.leaderboard.length === 0) {
+                        <tr><td colspan="4" style="padding: 2rem; text-align: center;">No submissions yet.</td></tr>
+                    }
+                    @for (res of examResults.leaderboard; track res.id; let i = $index) {
+                        <tr style="border-bottom: 1px solid var(--glass-border);" [style.background]="i === 0 ? 'rgba(255,215,0,0.1)' : 'transparent'">
+                            <td style="padding: 1rem; font-weight: bold;">#{{ i + 1 }}</td>
+                            <td style="padding: 1rem;"><strong>{{ res.studentName || 'Unknown' }}</strong></td>
+                            <td style="padding: 1rem; color: var(--success);">{{ res.correctAnswers }}</td>
+                            <td style="padding: 1rem; color: var(--accent-primary); font-weight: bold;">{{ res.score }}</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  }
+  
+  <div class="flex justify-between items-center mb-4">
+    <h2>Teacher Dashboard</h2>
+  </div>
+
+  <div style="display: flex; gap: 2rem;">
+    <!-- Exam Management -->
+    <div style="flex: 1;">
+      <div class="glass-panel text-left" style="padding: 2rem;">
+        <h3 style="border-bottom: 2px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1.5rem;">✨ Create New Exam</h3>
+        <form (submit)="handleCreateExam($event)">
+          <div style="margin-bottom: 1.5rem;">
+             <h4 style="color: var(--accent-primary); margin-bottom: 1rem;">1. Basic Details</h4>
+             <div class="flex gap-4">
+               <div class="form-group" style="flex: 1;">
+                 <label>Exam Title</label>
+                 <input placeholder="e.g. Midterm Assessment" required name="title" [(ngModel)]="newExam.title" />
+               </div>
+               <div class="form-group" style="flex: 1;">
+                 <label>Subject Category</label>
+                 <input placeholder="e.g. Science" required name="subject" [(ngModel)]="newExam.subject" />
+               </div>
+             </div>
+             
+             <div class="form-group">
+               <label>Description & Instructions</label>
+               <textarea rows="3" placeholder="Provide clear instructions for the students..." required name="description" [(ngModel)]="newExam.description"></textarea>
+             </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+             <h4 style="color: var(--accent-primary); margin-bottom: 1rem;">2. Rules & Marking</h4>
+             <div class="flex gap-4">
+               <div class="form-group" style="flex: 1;">
+                   <label>Duration (mins)</label>
+                   <input type="number" required name="durationMinutes" [(ngModel)]="newExam.durationMinutes" />
+               </div>
+               <div class="form-group" style="flex: 1;">
+                   <label>+ Marks per Correct</label>
+                   <input type="number" step="0.1" required name="positiveMarksPerQuestion" [(ngModel)]="newExam.positiveMarksPerQuestion" />
+               </div>
+               <div class="form-group" style="flex: 1;">
+                   <label>- Marks per Wrong</label>
+                   <input type="number" step="0.1" required name="negativeMarksPerQuestion" [(ngModel)]="newExam.negativeMarksPerQuestion" />
+               </div>
+             </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="padding: 1rem; font-size: 1.1rem;">Publish Exam Configuration</button>
+        </form>
+      </div>
+
+      <h3 class="mt-4 mb-4">Your Exams</h3>
+      
+      @if (!selectedSubject) {
+        <div class="dashboard-grid">
+           @for (sub of subjects; track sub) {
+               <div class="glass-panel" 
+                style="cursor: pointer; text-align: center; padding: 3rem; transition: transform 0.3s ease, box-shadow 0.3s ease;" 
+                (mouseenter)="$any($event.target).style.transform = 'translateY(-5px)'; $any($event.target).style.boxShadow = '0 10px 40px rgba(139,92,246,0.3)'"
+                (mouseleave)="$any($event.target).style.transform = 'translateY(0)'; $any($event.target).style.boxShadow = '0 8px 32px 0 rgba(0,0,0,0.37)'"
+                (click)="selectedSubject = sub">
+                   <div style="font-size: 3rem; margin-bottom: 1rem; display: inline-block; background: rgba(139,92,246,0.2); padding: 1rem; border-radius: 50%;">
+                    📁
+                   </div>
+                   <h3>{{ sub }}</h3>
+                   <div style="color: var(--accent-secondary); font-weight: bold; margin-top: 0.5rem;">
+                       {{ getExamsForSubject(sub)?.length || 0 }} Published Exams
+                   </div>
+               </div>
+           }
+           @if (subjects.length === 0) {
+             <p>No exams created yet.</p>
+           }
+        </div>
+      } @else {
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <button class="btn btn-secondary mb-2" (click)="selectedSubject = null; selectedExam = null" style="width: auto; padding: 0.5rem;">⬅ Back to Map</button>
+          
+          @for (exam of filteredExams; track exam.id) {
+            <div class="glass-panel" style="padding: 1.5rem; cursor: pointer;" [style.border]="selectedExam?.id === exam.id ? '2px solid var(--accent-primary)' : ''" (click)="selectedExam = exam">
+              <div class="flex justify-between items-center">
+                <h4>{{ exam.title }}</h4>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button 
+                    class="btn btn-secondary" 
+                    style="padding: 0.2rem 0.5rem; width: auto; font-size: 0.8rem;"
+                    (click)="handleViewResults(exam, $event)">
+                    📊 Results
+                    </button>
+                    <button 
+                    class="btn btn-danger" 
+                    style="padding: 0.2rem 0.5rem; width: auto; font-size: 0.8rem;"
+                    (click)="handleDeleteExam(exam.id, $event)">
+                    ❌ Delete
+                    </button>
+                </div>
+              </div>
+              <p>{{ exam.description }}</p>
+              <div class="flex gap-4 mt-4" style="font-size: 0.8rem;">
+                 <span>⏱️ {{ exam.durationMinutes }} mins</span>
+                 <span style="color: var(--success);">+{{ exam.positiveMarksPerQuestion }}</span>
+                 <span style="color: var(--danger);">-{{ exam.negativeMarksPerQuestion }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Question Management -->
+    <div style="flex: 1;">
+      @if (selectedExam) {
+        <div class="glass-panel">
+          <h3>Add Question to "{{ selectedExam.title }}"</h3>
+          <form (submit)="handleAddQuestion($event)" class="mt-4">
+            <div class="form-group">
+              <textarea placeholder="Question Text..." required name="qtext" [(ngModel)]="newQuestion.text"></textarea>
+            </div>
+            <div class="form-group flex gap-4">
+               <div style="flex: 1;"><input placeholder="Option A" required name="qa" [(ngModel)]="newQuestion.optionA" /></div>
+               <div style="flex: 1;"><input placeholder="Option B" required name="qb" [(ngModel)]="newQuestion.optionB" /></div>
+            </div>
+            <div class="form-group flex gap-4">
+               <div style="flex: 1;"><input placeholder="Option C" required name="qc" [(ngModel)]="newQuestion.optionC" /></div>
+               <div style="flex: 1;"><input placeholder="Option D" required name="qd" [(ngModel)]="newQuestion.optionD" /></div>
+            </div>
+            <div class="form-group">
+              <label>Correct Option</label>
+              <select name="correctOption" [(ngModel)]="newQuestion.correctOption">
+                <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+              </select>
+            </div>
+            
+            <div class="form-group" style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+               <label>Attach Diagram (Optional)</label>
+               <input type="file" accept="image/*" (change)="onFileChange($event)" style="background: transparent; border: none; padding: 0;" />
+            </div>
+
+            <button type="submit" class="btn btn-secondary mt-4">Add Question</button>
+          </form>
+        </div>
+      } @else {
+        <div class="glass-panel text-center" style="padding: 4rem 2rem; color: var(--text-secondary);">
+           {{ selectedSubject ? 'Select an exam from the list to start adding questions!' : 'Select a subject first to view and manage its exams.' }}
+        </div>
+      }
+    </div>
+  </div>
+</div>

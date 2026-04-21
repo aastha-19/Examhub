@@ -17,7 +17,7 @@ public class ResultServiceApplication {
 
     @Bean
     @LoadBalanced
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
+    public RestTemplate restTemplate(org.springframework.boot.web.client.RestTemplateBuilder builder) {
+        return builder.build();
     }
 }

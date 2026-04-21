@@ -17,6 +17,24 @@ public class ResultController {
     @Autowired
     private ResultService resultService;
 
+    // Student: Start exam (Locks Timer)
+    @PostMapping("/start/{examId}")
+    public void startExam(
+            @RequestHeader(value = "X-User-Role", required = false) String role,
+            @RequestHeader(value = "X-User-Id", required = false) Long userIdHeader,
+            @PathVariable Long examId) {
+        
+        if (!"ROLE_STUDENT".equals(role)) {
+            throw new RuntimeException("Unauthorized: Only Students can start exams");
+        }
+        
+        if (userIdHeader == null) {
+            throw new RuntimeException("User identity not found in headers");
+        }
+        
+        resultService.startExam(userIdHeader, examId);
+    }
+
     // Student: Submit exam answers
     @PostMapping("/submit")
     public Result submitExam(

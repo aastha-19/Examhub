@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ExamhubNg</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      document.body.innerHTML += '<div style="color: red; padding: 20px; z-index: 99999; position: fixed; top: 0; background: white;"><strong>Error:</strong> ' + msg + '<br/>Line: ' + line + '</div>';
+    };
+    window.onunhandledrejection = function(event) {
+      document.body.innerHTML += '<div style="color: red; padding: 20px; z-index: 99999; position: fixed; top: 50px; background: white;"><strong>Promise Rejection:</strong> ' + event.reason + '</div>';
+    };
+    var originalConsoleError = console.error;
+    console.error = function() {
+      originalConsoleError.apply(console, arguments);
+      var msg = Array.from(arguments).map(String).join(' ');
+      document.body.innerHTML += '<div style="color: red; padding: 20px; z-index: 99999; position: relative; background: white; border-bottom: 1px solid black;"><strong>Console Error:</strong> ' + msg + '</div>';
+    };
+  </script>
+</body>
+</html>

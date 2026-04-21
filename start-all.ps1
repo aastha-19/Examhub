@@ -6,7 +6,7 @@ foreach ($service in $services) {
     Start-Sleep -Seconds 5 # small delay to stagger startup
 }
 
-Write-Host "Starting examhub-frontend in a new window..."
-Start-Process powershell -ArgumentList "-NoExit -Command `"cd .\examhub-frontend; npm install; npm run dev`""
+Write-Host "Starting examhub-ng in a new window..."
+Start-Process powershell -ArgumentList "-NoExit -Command `"cd .\examhub-ng; npm install; npm start`""
 
 Write-Host "All services and the frontend have been launched in separate windows!"

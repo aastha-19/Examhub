@@ -20,13 +20,9 @@ public class Question {
 
     @NotBlank(message = "Question text is required")
     private String text;
-    @NotBlank(message = "Option A is required")
     private String optionA;
-    @NotBlank(message = "Option B is required")
     private String optionB;
-    @NotBlank(message = "Option C is required")
     private String optionC;
-    @NotBlank(message = "Option D is required")
     private String optionD;
     
     private String questionType = "MULTIPLE_CHOICE"; // MULTIPLE_CHOICE, TRUE_FALSE, FILL_IN_BLANK

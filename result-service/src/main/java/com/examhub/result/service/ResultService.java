@@ -20,7 +20,38 @@ public class ResultService {
     private ResultRepository resultRepository;
 
     @Autowired
+    private com.examhub.result.repository.ExamAttemptRepository examAttemptRepository;
+
+    @Autowired
+    private com.examhub.result.repository.StudentResponseRepository studentResponseRepository;
+
+    @Autowired
     private RestTemplate restTemplate;
+
+    public void startExam(Long userId, Long examId) {
+        // Fetch exam rules to get duration
+        String examUrl = "http://EXAM-SERVICE/api/exams/" + examId;
+        ResponseEntity<com.examhub.result.dto.ExamDTO> examResponse = restTemplate.getForEntity(examUrl, com.examhub.result.dto.ExamDTO.class);
+        com.examhub.result.dto.ExamDTO exam = examResponse.getBody();
+        
+        examAttemptRepository.findByUserIdAndExamId(userId, examId).ifPresentOrElse(
+            attempt -> { /* Already started */ },
+            () -> {
+                com.examhub.result.entity.ExamAttempt attempt = new com.examhub.result.entity.ExamAttempt();
+                attempt.setUserId(userId);
+                attempt.setExamId(examId);
+                attempt.setStartTime(java.time.LocalDateTime.now());
+                if (exam != null && exam.getDurationMinutes() > 0) {
+                    attempt.setDurationMinutes(exam.getDurationMinutes());
+                    attempt.setExpectedEndTime(java.time.LocalDateTime.now().plusMinutes(exam.getDurationMinutes()).plusMinutes(1)); // 1 min grace
+                } else {
+                    attempt.setDurationMinutes(0);
+                }
+                attempt.setSubmitted(false);
+                examAttemptRepository.save(attempt);
+            }
+        );
+    }
 
     public Result submitExam(SubmitExamRequest request) {
         // Fetch exam rules from exam-service
@@ -28,10 +59,16 @@ public class ResultService {
         ResponseEntity<com.examhub.result.dto.ExamDTO> examResponse = restTemplate.getForEntity(examUrl, com.examhub.result.dto.ExamDTO.class);
         com.examhub.result.dto.ExamDTO exam = examResponse.getBody();
 
-        if (exam != null && exam.getExpirationDate() != null) {
-            if (java.time.LocalDateTime.now().isAfter(exam.getExpirationDate())) {
-                throw new RuntimeException("Exam has expired. Submission rejected!");
-            }
+        // Strict timer check
+        com.examhub.result.entity.ExamAttempt attempt = examAttemptRepository.findByUserIdAndExamId(request.getUserId(), request.getExamId())
+            .orElseThrow(() -> new RuntimeException("Exam attempt not found. Did you start the exam?"));
+            
+        if (attempt.isSubmitted()) {
+            throw new RuntimeException("Exam already submitted.");
+        }
+        
+        if (attempt.getExpectedEndTime() != null && java.time.LocalDateTime.now().isAfter(attempt.getExpectedEndTime())) {
+            throw new RuntimeException("Time is up! Exam auto-submitted.");
         }
 
         // Fetch questions from exam-service using RestTemplate
@@ -83,9 +120,32 @@ public class ResultService {
         result.setWrongAnswers(wrongAnswers);
         result.setUnattempted(unattempted);
         result.setScore(score);
+        result.setTabSwitches(request.getTabSwitches());
         result.setAttemptedAt(java.time.LocalDateTime.now());
+        
+        // Save result and lock attempt
+        Result savedResult = resultRepository.save(result);
+        
+        attempt.setSubmitted(true);
+        examAttemptRepository.save(attempt);
 
-        return resultRepository.save(result);
+        // Save detailed student responses
+        if (questions != null) {
+            for (QuestionDTO question : questions) {
+                String submittedAnswer = request.getAnswers().get(question.getId());
+                boolean isCorrect = checkAnswerMatch(submittedAnswer, question.getCorrectOption(), question.getQuestionType());
+                
+                com.examhub.result.entity.StudentResponse sr = new com.examhub.result.entity.StudentResponse();
+                sr.setResultId(savedResult.getId());
+                sr.setExamId(request.getExamId());
+                sr.setQuestionId(question.getId());
+                sr.setSelectedOption(submittedAnswer);
+                sr.setCorrect(isCorrect);
+                studentResponseRepository.save(sr);
+            }
+        }
+
+        return savedResult;
     }
 
     private boolean checkAnswerMatch(String submitted, String correct, String questionType) {
@@ -119,6 +179,32 @@ public class ResultService {
         java.util.Map<String, Object> analytics = new java.util.HashMap<>();
         analytics.put("totalParticipants", totalParticipants);
         analytics.put("averageScore", averageScore != null ? Math.round(averageScore * 100.0) / 100.0 : 0.0);
+        
+        // Question-wise Analytics
+        List<com.examhub.result.entity.StudentResponse> responses = studentResponseRepository.findByExamId(examId);
+        java.util.Map<Long, java.util.Map<String, Object>> qStats = new java.util.HashMap<>();
+        
+        for (com.examhub.result.entity.StudentResponse sr : responses) {
+            Long qId = sr.getQuestionId();
+            qStats.putIfAbsent(qId, new java.util.HashMap<>());
+            java.util.Map<String, Object> stat = qStats.get(qId);
+            stat.putIfAbsent("correct", 0);
+            stat.putIfAbsent("total", 0);
+            
+            stat.put("total", (int) stat.get("total") + 1);
+            if (sr.isCorrect()) {
+                stat.put("correct", (int) stat.get("correct") + 1);
+            }
+        }
+        
+        // Calculate percentages
+        for (java.util.Map<String, Object> stat : qStats.values()) {
+            int correct = (int) stat.get("correct");
+            int total = (int) stat.get("total");
+            stat.put("accuracy", total > 0 ? Math.round((correct * 100.0) / total) : 0);
+        }
+        
+        analytics.put("questionMetrics", qStats);
         return analytics;
     }
 }

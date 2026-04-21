@@ -22,6 +22,9 @@ public class ExamService {
 
     @Autowired
     private QuestionRepository questionRepository;
+    
+    @Autowired
+    private com.examhub.exam.repository.BookmarkRepository bookmarkRepository;
 
     public Exam createExam(Exam exam) {
         return examRepository.save(exam);
@@ -72,6 +75,26 @@ public class ExamService {
         if (!examRepository.existsById(id)) {
             throw new RuntimeException("Exam not found");
         }
+        bookmarkRepository.deleteByExamId(id);
         examRepository.deleteById(id);
+    }
+
+    public com.examhub.exam.entity.Bookmark toggleBookmark(Long userId, Long examId, Long questionId) {
+        java.util.Optional<com.examhub.exam.entity.Bookmark> existing = bookmarkRepository.findByUserIdAndQuestionId(userId, questionId);
+        if (existing.isPresent()) {
+            bookmarkRepository.delete(existing.get());
+            return null;
+        } else {
+            com.examhub.exam.entity.Bookmark b = new com.examhub.exam.entity.Bookmark();
+            b.setUserId(userId);
+            b.setExamId(examId);
+            b.setQuestionId(questionId);
+            b.setBookmarkedAt(java.time.LocalDateTime.now());
+            return bookmarkRepository.save(b);
+        }
+    }
+
+    public List<com.examhub.exam.entity.Bookmark> getUserBookmarks(Long userId) {
+        return bookmarkRepository.findByUserId(userId);
     }
 }
