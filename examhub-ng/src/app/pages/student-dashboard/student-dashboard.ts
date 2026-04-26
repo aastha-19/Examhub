@@ -21,6 +21,7 @@ export default class StudentDashboard implements OnInit, AfterViewChecked {
   results: any[] = [];
   selectedSubject: string | null = null;
   loading: boolean = true;
+  errorMessage: string | null = null;
   examResults: any = null;
   performanceData: any = null;
   chartInstance: any = null;
@@ -57,7 +58,12 @@ export default class StudentDashboard implements OnInit, AfterViewChecked {
         this.loading = false;
       },
       error: (err) => {
-        console.error("Failed to load dashboard data", err);
+        let msg = err.error?.error || err.error?.message;
+        if (!msg && err.error && typeof err.error === 'object') {
+            msg = Object.values(err.error).join(', ');
+        }
+        this.errorMessage = msg || (typeof err.error === 'string' ? err.error : err.message) || "Failed to load dashboard data";
+        console.error("Failed to load dashboard data:", err);
         this.loading = false;
       }
     });

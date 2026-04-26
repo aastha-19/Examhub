@@ -24,6 +24,23 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(org.springframework.web.client.HttpStatusCodeException.class)
+    public ResponseEntity<Map<String, String>> handleHttpStatusCodeException(org.springframework.web.client.HttpStatusCodeException ex) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, String> errorMap = mapper.readValue(ex.getResponseBodyAsString(), new com.fasterxml.jackson.core.type.TypeReference<Map<String, String>>() {});
+            if (errorMap.containsKey("error")) {
+                response.put("error", errorMap.get("error"));
+            } else {
+                response.put("error", ex.getResponseBodyAsString());
+            }
+        } catch (Exception e) {
+            response.put("error", ex.getResponseBodyAsString());
+        }
+        return new ResponseEntity<>(response, HttpStatus.valueOf(ex.getStatusCode().value()));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeExceptions(RuntimeException ex) {
         Map<String, String> response = new HashMap<>();

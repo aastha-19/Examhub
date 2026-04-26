@@ -53,8 +53,9 @@ export default class TeacherDashboard implements OnInit {
     });
   }
 
-  handleCreateExam(e: Event) {
+  handleCreateExam(e: Event, form?: any) {
     e.preventDefault();
+    if (form && form.invalid) return;
     this.api.post('/api/exams/create', this.newExam).subscribe({
       next: () => {
         this.dialogMessage = "Exam Created!";
@@ -73,7 +74,13 @@ export default class TeacherDashboard implements OnInit {
         if (this.selectedExam?.id === examId) this.selectedExam = null;
         this.loadExams();
       },
-      error: (err) => this.dialogMessage = err.message
+      error: (err) => {
+          let msg = err.error?.error || err.error?.message;
+          if (!msg && err.error && typeof err.error === 'object') {
+              msg = Object.values(err.error).join(', ');
+          }
+          this.dialogMessage = msg || (typeof err.error === 'string' ? err.error : err.message);
+      }
     });
   }
 
@@ -93,8 +100,9 @@ export default class TeacherDashboard implements OnInit {
     }
   }
 
-  handleAddQuestion(e: Event) {
+  handleAddQuestion(e: Event, form?: any) {
     e.preventDefault();
+    if (form && form.invalid) return;
     this.api.post<any>(`/api/exams/${this.selectedExam.id}/questions`, this.newQuestion).subscribe({
       next: (qData) => {
         if (this.imageFile) {

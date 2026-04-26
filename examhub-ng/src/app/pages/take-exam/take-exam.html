@@ -52,9 +52,29 @@
         </div>
       </div>
 
+      <div class="glass-panel mb-4" style="padding: 1.5rem;">
+         <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Question Navigator</h3>
+         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            @for (q of questions; track q.id; let i = $index) {
+                <button (click)="scrollToQuestion(i)" 
+                        style="width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; transition: all 0.2s;"
+                        [style.background]="bookmarkedQuestions.has(q.id.toString()) ? 'var(--accent-primary)' : (answers[q.id] ? 'var(--success)' : 'transparent')"
+                        [style.color]="bookmarkedQuestions.has(q.id.toString()) || answers[q.id] ? 'white' : 'var(--text-primary)'"
+                        [style.border-color]="bookmarkedQuestions.has(q.id.toString()) ? 'var(--accent-primary)' : (answers[q.id] ? 'var(--success)' : 'var(--glass-border)')">
+                   {{ i + 1 }}
+                </button>
+            }
+         </div>
+         <div style="display: flex; gap: 1.5rem; margin-top: 1.5rem; font-size: 0.9rem; flex-wrap: wrap;">
+             <div style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 14px; height: 14px; background: var(--success); border-radius: 4px;"></span> Answered</div>
+             <div style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 14px; height: 14px; background: var(--accent-primary); border-radius: 4px;"></span> Marked for Review</div>
+             <div style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 14px; height: 14px; background: transparent; border: 1px solid var(--glass-border); border-radius: 4px;"></span> Unanswered</div>
+         </div>
+      </div>
+
       <div style="display: flex; flex-direction: column; gap: 2rem;">
         @for (q of questions; track q.id; let i = $index) {
-          <div class="glass-panel">
+          <div class="glass-panel" [id]="'question-' + i">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                 <h3 style="font-size: 1.2rem; flex: 1;">{{ i + 1 }}. {{ q.text }}</h3>
                 <button (click)="toggleBookmark(q.id)" 

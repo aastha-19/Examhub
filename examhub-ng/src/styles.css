@@ -202,3 +202,32 @@ input::placeholder {
   gap: 1.5rem;
   margin-top: 2rem;
 }
+
+/* Global Form Validation Styles */
+form.ng-submitted .form-group:has(input.ng-invalid)::after,
+form.ng-submitted .form-group:has(textarea.ng-invalid)::after,
+form.ng-submitted .form-group:has(select.ng-invalid)::after,
+.form-group:has(input.ng-invalid.ng-touched)::after,
+.form-group:has(textarea.ng-invalid.ng-touched)::after,
+.form-group:has(select.ng-invalid.ng-touched)::after {
+  content: "⚠ Please fill out this required field.";
+  color: var(--danger);
+  font-size: 0.85rem;
+  display: block;
+  margin-top: 0.4rem;
+  animation: fadeIn 0.3s ease;
+}
+
+form.ng-submitted input.ng-invalid,
+form.ng-submitted textarea.ng-invalid,
+form.ng-submitted select.ng-invalid,
+input.ng-invalid.ng-touched,
+textarea.ng-invalid.ng-touched,
+select.ng-invalid.ng-touched {
+  border-color: var(--danger) !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

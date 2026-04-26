@@ -47,8 +47,9 @@ export default class AuthPage implements OnInit {
     this.error = '';
   }
 
-  async handleSubmit(e: Event) {
+  async handleSubmit(e: Event, form?: any) {
     e.preventDefault();
+    if (form && form.invalid) return;
     this.error = '';
 
     if (!this.isLogin) {

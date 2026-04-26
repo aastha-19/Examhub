@@ -20,6 +20,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
+            if (exchange.getRequest().getMethod().name().equals("OPTIONS")) {
+                return chain.filter(exchange);
+            }
+
             boolean isRouteMissingAuthHeader = !exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION);
 
             if (isRouteMissingAuthHeader) {
@@ -49,7 +53,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 // Simple Gateway Level Role-Based Access Control (can be overridden by downstream)
                 String path = exchange.getRequest().getPath().toString();
                 String method = exchange.getRequest().getMethod().name();
-                boolean isRestrictedQuestionAction = path.contains("/questions") && !"GET".equals(method);
+                boolean isRestrictedQuestionAction = path.contains("/questions") && !path.contains("/bookmarks/") && !"GET".equals(method);
                 
                 if (path.startsWith("/api/exams/create") || isRestrictedQuestionAction) {
                     if (!"ROLE_TEACHER".equals(role) && !"ROLE_ADMIN".equals(role)) {

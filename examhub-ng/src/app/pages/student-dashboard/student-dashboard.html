@@ -9,6 +9,12 @@
     <div class="text-center" style="margin-top: 10vh;">
       <h2>Loading Dashboard...</h2>
     </div>
+  } @else if (errorMessage) {
+    <div class="glass-panel" style="margin-top: 10vh; text-align: center; border-color: var(--danger);">
+      <h2 style="color: var(--danger);">Error Loading Data</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">{{ errorMessage }}</p>
+      <button class="btn btn-primary" (click)="loadData()">Retry</button>
+    </div>
   } @else {
     <!-- Tabs -->
     <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--glass-border); margin-bottom: 2rem;">

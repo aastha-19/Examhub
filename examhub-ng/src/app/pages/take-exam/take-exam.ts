@@ -1,13 +1,13 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ApiService } from '../../core/api';
 import { AuthService } from '../../core/auth';
 
 @Component({
   selector: 'app-take-exam',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './take-exam.html'
 })
 export default class TakeExam implements OnInit, OnDestroy {
@@ -49,29 +49,42 @@ export default class TakeExam implements OnInit, OnDestroy {
   }
 
   fetchData(examId: string) {
-    // Lock server-side timer
-    this.api.post(`/api/results/start/${examId}`, {}, { responseType: 'text' }).subscribe({
-       error: (err) => console.error("Start Timer Warning:", err)
-    });
-
-    this.api.get<any>(`/api/exams/${examId}`).subscribe({
-      next: (ex) => {
-        this.exam = ex;
-        if (ex.durationMinutes) {
-          this.timeLeft = ex.durationMinutes * 60;
-          this.startTimer();
-        }
-      },
-      error: () => this.showDialog("Failed to load exam details.")
-    });
-
     this.api.get<any[]>(`/api/exams/${examId}/questions`).subscribe({
-      next: (qs) => this.questions = qs
-    });
+      next: (qs) => {
+        if (qs.length === 0) {
+          this.showDialog("This exam is not yet scheduled or has no questions.", () => this.router.navigate(['/student']), false);
+          return;
+        }
+        
+        this.questions = qs;
 
-    this.api.get<any[]>('/api/exams/bookmarks').subscribe({
-      next: (marks) => {
-        marks.forEach(m => this.bookmarkedQuestions.add(m.questionId.toString()));
+        // Lock server-side timer only if there are questions
+        this.api.post(`/api/results/start/${examId}`, {}, { responseType: 'text' }).subscribe({
+           error: (err) => {
+               let msg = err.error?.error || err.error?.message;
+               if (!msg && err.error && typeof err.error === 'object') {
+                   msg = Object.values(err.error).join(', ');
+               }
+               this.showDialog('Error starting exam: ' + (msg || err.message || 'Unknown server error'));
+           }
+        });
+
+        this.api.get<any>(`/api/exams/${examId}`).subscribe({
+          next: (ex) => {
+            this.exam = ex;
+            if (ex.durationMinutes) {
+              this.timeLeft = ex.durationMinutes * 60;
+              this.startTimer();
+            }
+          },
+          error: () => this.showDialog("Failed to load exam details.")
+        });
+
+        this.api.get<any[]>('/api/exams/bookmarks').subscribe({
+          next: (marks) => {
+            marks.forEach(m => this.bookmarkedQuestions.add(m.questionId.toString()));
+          }
+        });
       }
     });
   }
@@ -84,6 +97,13 @@ export default class TakeExam implements OnInit, OnDestroy {
        this.bookmarkedQuestions.add(qStr);
     }
     this.api.post(`/api/exams/bookmarks/${this.id}/questions/${qId}`, {}, { responseType: 'text' }).subscribe();
+  }
+
+  scrollToQuestion(index: number) {
+    const el = document.getElementById('question-' + index);
+    if (el) {
+       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   startTimer() {
@@ -141,7 +161,13 @@ export default class TakeExam implements OnInit, OnDestroy {
 
     this.api.post('/api/results/submit', payload).subscribe({
       next: (res) => this.result = res,
-      error: (err) => this.showDialog(err.error?.message || err.message)
+      error: (err) => {
+          let msg = err.error?.error || err.error?.message;
+          if (!msg && err.error && typeof err.error === 'object') {
+              msg = Object.values(err.error).join(', ');
+          }
+          this.showDialog(msg || err.message || 'An unknown error occurred');
+      }
     });
   }
 
