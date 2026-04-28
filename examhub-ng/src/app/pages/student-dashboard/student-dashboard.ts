@@ -3,20 +3,20 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/api';
 import { AuthService } from '../../core/auth';
-import { BaseChartDirective } from 'ng2-charts';
+// import { BaseChartDirective } from 'ng2-charts';
 import ThemeToggle from '../../components/theme-toggle/theme-toggle';
 import { forkJoin } from 'rxjs';
-import { Chart } from 'chart.js/auto';
+// import { Chart } from 'chart.js/auto';
 
 @Component({
   selector: 'app-student-dashboard',
   standalone: true,
-  imports: [CommonModule, BaseChartDirective, ThemeToggle],
+  imports: [CommonModule, ThemeToggle], // BaseChartDirective commented out
   templateUrl: './student-dashboard.html'
 })
 export default class StudentDashboard implements OnInit, AfterViewChecked {
   activeTab: 'subjects' | 'results' | 'progress' = 'subjects';
-  @ViewChild('progressChart') progressChartRef!: ElementRef;
+  // @ViewChild('progressChart') progressChartRef!: ElementRef;
   exams: any[] = [];
   results: any[] = [];
   selectedSubject: string | null = null;
@@ -24,7 +24,7 @@ export default class StudentDashboard implements OnInit, AfterViewChecked {
   errorMessage: string | null = null;
   examResults: any = null;
   performanceData: any = null;
-  chartInstance: any = null;
+  // chartInstance: any = null;
   isDarkMode = false;
 
   constructor(private api: ApiService, private router: Router, public authService: AuthService) {}
@@ -99,11 +99,14 @@ export default class StudentDashboard implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked() {
+    /*
     if (this.activeTab === 'progress' && this.progressChartRef && !this.chartInstance) {
       this.renderProgressChart();
     }
+    */
   }
 
+  /*
   renderProgressChart() {
     const ctx = this.progressChartRef.nativeElement.getContext('2d');
     const chartData = [...this.richResults].reverse(); // oldest first for chron graph
@@ -132,6 +135,7 @@ export default class StudentDashboard implements OnInit, AfterViewChecked {
       }
     });
   }
+  */
 
   getPassStatus(res: any) {
     const percentage = (res.correctAnswers / res.totalQuestions) * 100;
