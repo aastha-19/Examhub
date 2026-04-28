@@ -22,8 +22,11 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public String addNewUser(@Valid @RequestBody User user) {
-        return service.saveUser(user);
+    public org.springframework.http.ResponseEntity<java.util.Map<String, String>> addNewUser(@Valid @RequestBody User user) {
+        String msg = service.saveUser(user);
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+        response.put("message", msg);
+        return org.springframework.http.ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")

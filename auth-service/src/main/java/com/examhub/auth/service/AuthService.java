@@ -21,6 +21,9 @@ public class AuthService {
     private JwtService jwtService;
 
     public String saveUser(User user) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new RuntimeException("Email is already registered");
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return "User added to the system";

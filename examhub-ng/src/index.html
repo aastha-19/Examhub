@@ -10,17 +10,28 @@
 <body>
   <app-root></app-root>
   <script>
+    function displayError(title, msg) {
+      var div = document.createElement('div');
+      div.style.color = 'red';
+      div.style.padding = '20px';
+      div.style.zIndex = '99999';
+      div.style.position = 'fixed';
+      div.style.top = '0';
+      div.style.background = 'white';
+      div.innerHTML = '<strong>' + title + ':</strong> ' + msg;
+      document.body.appendChild(div);
+    }
     window.onerror = function(msg, url, line, col, error) {
-      document.body.innerHTML += '<div style="color: red; padding: 20px; z-index: 99999; position: fixed; top: 0; background: white;"><strong>Error:</strong> ' + msg + '<br/>Line: ' + line + '</div>';
+      displayError('Error', msg + '<br/>Line: ' + line);
     };
     window.onunhandledrejection = function(event) {
-      document.body.innerHTML += '<div style="color: red; padding: 20px; z-index: 99999; position: fixed; top: 50px; background: white;"><strong>Promise Rejection:</strong> ' + event.reason + '</div>';
+      displayError('Promise Rejection', event.reason);
     };
     var originalConsoleError = console.error;
     console.error = function() {
       originalConsoleError.apply(console, arguments);
       var msg = Array.from(arguments).map(String).join(' ');
-      document.body.innerHTML += '<div style="color: red; padding: 20px; z-index: 99999; position: relative; background: white; border-bottom: 1px solid black;"><strong>Console Error:</strong> ' + msg + '</div>';
+      displayError('Console Error', msg);
     };
   </script>
 </body>
