@@ -1,0 +1,108 @@
+<div class="container flex items-center justify-between" style="height: 100vh; padding: 0; position: relative;">
+  <!-- Theme Toggle Floating Button -->
+  <div style="position: fixed; top: 2rem; right: 2rem; z-index: 100;">
+    <app-theme-toggle [isDarkMode]="isDarkMode" (toggle)="toggleTheme()"></app-theme-toggle>
+  </div>
+
+  <div style="flex: 1; padding: 4rem; display: flex; flex-direction: column; justify-content: center;">
+    <h1 style="font-size: 4rem; line-height: 1.2;">Master Your<br/>Future with ExamHub</h1>
+    <p style="font-size: 1.2rem; margin-top: 1rem; max-width: 400px;">
+      The premium platform for educators and students to seamlessly conduct and take examinations.
+    </p>
+  </div>
+
+  <div style="flex: 1; display: flex; justify-content: center;">
+    <div class="glass-panel" style="width: 100%; max-width: 450px;">
+      <h2 class="text-center">{{ isLogin ? 'Welcome Back' : 'Create Account' }}</h2>
+      
+      @if (error) {
+        <div style="color: var(--danger); margin-bottom: 1rem; text-align: center; line-height: 1.4;">{{ error }}</div>
+      }
+      
+      <form #authForm="ngForm" (submit)="handleSubmit($event, authForm)">
+        @if (!isLogin) {
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" required placeholder="Enter your name" name="name" [(ngModel)]="formData.name" />
+          </div>
+        }
+        
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" required placeholder="Enter your college email id" name="email" [(ngModel)]="formData.email" />
+        </div>
+        
+        <div class="form-group" style="position: relative;">
+          <label>Password</label>
+          <div style="display: flex; align-items: center;">
+            <input 
+              [type]="showPassword ? 'text' : 'password'"
+              required placeholder="••••••••"
+              name="password" [(ngModel)]="formData.password"
+              style="flex: 1;"
+            />
+            <button type="button" (click)="showPassword = !showPassword"
+              style="position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-secondary); margin-top: 20px; padding: 0.4rem;">
+              @if (showPassword) {
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                  <line x1="2" x2="22" y1="2" y2="22" />
+                </svg>
+              }
+            </button>
+          </div>
+        </div>
+
+        @if (!isLogin) {
+          <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" required placeholder="••••••••" name="confirmPassword" [(ngModel)]="formData.confirmPassword" />
+          </div>
+
+          <div class="form-group">
+            <label>Role</label>
+            <select name="role" [(ngModel)]="formData.role" (change)="formData.sapid = ''" required>
+              <option value="" disabled>Select</option>
+              <option value="ROLE_STUDENT">Student</option>
+              <option value="ROLE_TEACHER">Teacher</option>
+            </select>
+          </div>
+          
+          @if (formData.role === 'ROLE_STUDENT') {
+            <div class="form-group">
+              <label>Class / Standard</label>
+              <select name="className" [(ngModel)]="formData.className" required>
+                <option value="" disabled>Select Class</option>
+                <option value="Class 10">Class 10</option>
+                <option value="Class 11">Class 11</option>
+                <option value="Class 12">Class 12</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>SAP ID</label>
+              <input type="text" required placeholder="Enter your SAPID" name="sapid" [(ngModel)]="formData.sapid" />
+            </div>
+          }
+        }
+
+        <button type="submit" class="btn btn-primary mt-4">
+          {{ isLogin ? 'Sign In' : 'Sign Up' }}
+        </button>
+      </form>
+
+      <p class="text-center mt-4" style="font-size: 0.9rem;">
+        {{ isLogin ? "Don't have an account? " : "Already have an account? " }}
+        <span (click)="toggleLoginMode()" style="color: var(--accent-primary); cursor: pointer; font-weight: 600;">
+          {{ isLogin ? 'Register' : 'Login' }}
+        </span>
+      </p>
+    </div>
+  </div>
+</div>

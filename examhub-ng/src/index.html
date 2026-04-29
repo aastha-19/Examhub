@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ExamHub</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+  <script>
+    function displayError(title, msg) {
+      var div = document.createElement('div');
+      div.style.color = 'red';
+      div.style.padding = '20px';
+      div.style.zIndex = '99999';
+      div.style.position = 'fixed';
+      div.style.top = '0';
+      div.style.background = 'white';
+      div.innerHTML = '<strong>' + title + ':</strong> ' + msg;
+      document.body.appendChild(div);
+    }
+    window.onerror = function(msg, url, line, col, error) {
+      displayError('Error', msg + '<br/>Line: ' + line);
+    };
+    window.onunhandledrejection = function(event) {
+      displayError('Promise Rejection', event.reason);
+    };
+    var originalConsoleError = console.error;
+    console.error = function() {
+      originalConsoleError.apply(console, arguments);
+      var msg = Array.from(arguments).map(String).join(' ');
+      displayError('Console Error', msg);
+    };
+  </script>
+</body>
+</html>
