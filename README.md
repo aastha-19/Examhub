@@ -1,107 +1,158 @@
-# ExamHub Microservices Project
+# 📚 ExamHub
 
-ExamHub is an online exam system built with Spring Boot and Spring Cloud Microservices Architecture.
+### Your Complete Exam Preparation Companion
 
-## Architecture & Services
-1. **Eureka Server** (`8761`): Service Registry.
-2. **API Gateway** (`8080`): Central entry point to the system, validates JWT tokens.
-3. **Auth Service** (`8081`): Manages user registration and login (generates JWTs). connects to `examhub_auth`.
-4. **Exam Service** (`8082`): Manages exams and questions. connects to `examhub_exam`.
-5. **Result Service** (`8083`): Evaluates exams. connects to `examhub_result`.
+ExamHub is a web-based platform designed to help students prepare effectively for exams. It provides easy access to study materials, notes, previous year papers, practice questions, and other learning resources in one place.
 
-## Prerequisites / Necessities
-- **Java 17+** (Backend microservices)
-- **Maven** (Backend dependencies)
-- **MySQL** (Database)
-- **Node.js (v18+) & npm** (To run the React frontend)
-- **Git** (For version control)
+---
 
-## Setup Instructions
+##  Overview
 
-### 1. Database Creation
-Open MySQL shell or Workbench and run:
-```sql
-CREATE DATABASE examhub_auth;
-CREATE DATABASE examhub_exam;
-CREATE DATABASE examhub_result;
-```
-Ensure your MySQL credentials are `root` / `Aastha19@` on `localhost:3306`, or update `application.properties` in each service. The tables will be auto-created by Hibernate.
+ExamHub aims to simplify exam preparation by offering a structured and user-friendly learning environment. Students can access educational resources, organize their study materials, and improve their preparation through practice and revision.
 
-### 2. Build the Project
-In each folder (`eureka-server`, `api-gateway`, `auth-service`, `exam-service`, `result-service`), run:
+---
+
+##  Features
+
+- Access study materials and notes
+- Browse previous year question papers
+- Practice important questions
+- Organized subject-wise resources
+- User-friendly and responsive interface
+- Fast and seamless navigation
+- Easy resource management
+
+---
+
+##  Tech Stack
+
+### Frontend
+- React.js
+- JavaScript
+- HTML5
+- CSS3
+- Bootstrap
+
+### Backend
+- Node.js
+- Express.js
+
+### Database
+- MongoDB
+
+---
+
+##  Project Structure
+
 ```bash
-mvn clean install
+ExamHub/
+│
+├── client/
+│   ├── src/
+│   └── public/
+│
+├── server/
+│   ├── routes/
+│   ├── controllers/
+│   ├── models/
+│
+├── screenshots/
+├── README.md
+└── package.json
 ```
 
-### 3. Run the Services
-Run each service in this specific order:
-1. Eureka Server: `mvn spring-boot:run`
-2. API Gateway
-3. Auth Service
-4. Exam Service
-5. Result Service
+---
 
-Check `http://localhost:8761` to verify all services are registered with Eureka.
+##  Installation
 
-## Postman API Examples
+### Clone the Repository
 
-> [!NOTE]
-> For all requests except Auth, pass the JWT token in the `Authorization` header as `Bearer <token>`.
-
-### 1. Register User (Auth Service)
-**POST** `http://localhost:8080/auth/register`
-```json
-{
-    "name": "Student One",
-    "email": "student1@example.com",
-    "password": "password123",
-    "role": "ROLE_STUDENT"
-}
+```bash
+git clone https://github.com/your-username/examhub.git
 ```
 
-### 2. Login User (Auth Service)
-**POST** `http://localhost:8080/auth/login`
-```json
-{
-    "email": "student1@example.com",
-    "password": "password123"
-}
-```
-*Response will be your raw JWT token string.* Keep this token for further requests.
+### Install Dependencies
 
-### 3. Create Exam (Exam Service - API Gateway)
-**POST** `http://localhost:8080/api/exams/create`
-**Headers**: `Authorization: Bearer <TOKEN>`
-```json
-{
-    "title": "Java Basics",
-    "description": "Basic Java terminology and concepts"
-}
+Frontend:
+
+```bash
+cd client
+npm install
 ```
 
-### 4. Add Question to Exam (Exam Service)
-**POST** `http://localhost:8080/api/exams/{exam_id}/questions`
-**Headers**: `Authorization: Bearer <TOKEN>`
-```json
-{
-    "text": "What is JVM?",
-    "optionA": "Java Viral Machine",
-    "optionB": "Java Virtual Machine",
-    "optionC": "Java Visual Machine",
-    "optionD": "None",
-    "correctOption": "B"
-}
+Backend:
+
+```bash
+cd server
+npm install
 ```
 
-### 5. Submit Exam (Result Service)
-**POST** `http://localhost:8080/api/results/submit`
-**Headers**: `Authorization: Bearer <TOKEN>`
-```json
-{
-    "examId": 1,
-    "userId": 1,
-    "answers": {
-        "1": "B"
-    }
-}
+### Configure Environment Variables
+
+Create a `.env` file in the server directory:
+
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
 ```
+
+### Run the Application
+
+Backend:
+
+```bash
+npm run dev
+```
+
+Frontend:
+
+```bash
+npm start
+```
+
+---
+
+##  Screenshots
+
+- Home Page
+  
+- Study Materials Section
+
+- Question Papers Section
+
+- Practice Dashboard
+
+- User Interface
+
+---
+
+##  Benefits
+
+- Helps students prepare efficiently
+- Provides centralized learning resources
+- Improves revision and practice
+- Saves time searching for study materials
+- Supports self-paced learning
+
+---
+
+##  Future Improvements
+
+- AI-powered study recommendations
+- Mock tests and quizzes
+- Progress tracking dashboard
+- Personalized study plans
+- Discussion forum for students
+- Dark mode support
+
+---
+
+##  Author
+
+**Aastha Jaiswal**
+
+GitHub: https://github.com/your-github-username
+
+---
+
+### If you like this project, consider giving it a ⭐ on GitHub.
