@@ -151,7 +151,7 @@ npm start
 
 **Aastha Jaiswal**
 
-GitHub: https://github.com/your-github-username
+GitHub: https://github.com/aastha-19
 
 ---
 
