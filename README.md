@@ -114,15 +114,18 @@ npm start
 
 ##  Screenshots
 
-- Home Page
+- Login/Register Page
+  <img width="1913" height="865" alt="image" src="https://github.com/user-attachments/assets/b1faa05a-6709-4a97-ab74-757a3d7bfe1d" />
+  <img width="1903" height="870" alt="image" src="https://github.com/user-attachments/assets/27968221-42c5-4334-8f90-b906c60016f3" />
   
-- Study Materials Section
+- Student Dashboard Section
+  <img width="1911" height="861" alt="image" src="https://github.com/user-attachments/assets/84d78100-9dbb-4030-9caa-e3233be21660" />
 
-- Question Papers Section
+- Teacher Dashboard Section
+  <img width="1890" height="860" alt="image" src="https://github.com/user-attachments/assets/3de4cba0-5bbe-4e02-9f34-6b368c18c693" />
 
-- Practice Dashboard
-
-- User Interface
+- Result Section
+  <img width="1919" height="856" alt="image" src="https://github.com/user-attachments/assets/460bf0ce-0916-4cfc-a8d7-566251e8b4de" />
 
 ---
 
